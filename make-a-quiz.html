@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make The Quiz</title>
+  <link rel="stylesheet" href="general.css">
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="make-a-quiz.css">
+  <link rel="stylesheet" href="cards.css">
+</head>
+<body>
+  <ul class="topnav">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="add-question.html">Add questions</a></li>
+    <li><a class="active" href="make-a-quiz.html">Create a quiz</a></li>
+    <li><a href="take-a-quiz.html">Take a quiz</a></li>
+    <li class="right"><a href="#about">About</a></li>
+  </ul>
+  <div class="questions">
+    <h2>Question Bank</h2>
+    <div id="list" class="cards"></div>
+  </div>
+  <div class="quiz">
+    <h2>New Quiz</h2>
+    <form>
+      <label for="quizTitle">Title: </label>
+      <input type="text" id="quizTitle" name="quizTitle">
+    </form>
+    <button onclick="saveTest()">Save Your Progress</button>
+    <button onclick="saveTestFinal()">Save Your Progress & Start New</button>
+    <div id="Qlist" class="cards"></div>
+  </div>
+  <script>
+    let firstSubmission = true;
+    let host = "https://midterm-latest-w94l.onrender.com";
+      let questions = [];
+      let quizQuestions = [];
+      displayTheQuestions();
+
+      async function getAll() {
+        let response = await fetch(host + "/questions");
+        let result = await response.json();
+        return result;
+      }
+      async function getQuestion(id) {
+        let response = await fetch(host + "/questions/" + id);
+        let result = await response.json();
+        return result;
+      }
+      
+    async function displayTheQuestions() {
+        if (questions.length == 0) {
+          questions = await getAll();
+        }
+
+        let list = document.getElementById("list");
+        list.innerHTML = "";
+
+        for (let question of questions) {
+          let div = document.createElement("div");
+          div.className = "card";
+          let innerHtml = `
+         
+        <img src="https://midterm-latest-w94l.onrender.com/questions/${question.id}/image" alt="question" style="width:100%">
+        <div class="container">
+          <h4><b>${question.id}</b></h4> 
+          <p>${question.description}</p>
+          <form>
+              <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+              <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+              <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+              <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+              <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+              <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+          </form> 
+          <button title="click to add" onclick="addtoTest(${question.id})">Add Question </button>
+        </div>
+     
+            `;
+          div.innerHTML = innerHtml;
+          list.appendChild(div);
+        }
+    }
+
+    async function displayTheTestQs(){
+        let Qlist = document.getElementById("Qlist");
+        Qlist.innerHTML = "";
+
+        for (let question of quizQuestions) {
+          let div = document.createElement("div");
+          div.className = "card";
+          let innerHtml = `
+         
+            <img src="https://midterm-latest-w94l.onrender.com/questions/${question.id}/image" alt="question" style="width:100%">
+            <div class="container">
+              <h4><b>${question.id}</b></h4> 
+              <p>${question.description}</p>
+              <form>
+                  <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+                  <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+                  <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+                  <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+                  <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+                  <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+              </form> 
+              <button title="click to add" onclick="removeFromTest(${question.id})"> Delete Question </button>
+            </div>
+     
+            `;
+          div.innerHTML = innerHtml;
+          Qlist.appendChild(div);
+        }
+    }
+    
+    async function addtoTest(id){
+      let questionNew = [];
+      for(let x of questions){
+        if(x.id != id){
+         questionNew.push(x);
+        }
+        else{
+          quizQuestions.push(x);
+        }
+      }
+      questions = questionNew;
+      displayTheQuestions();
+      displayTheTestQs();
+    }
+
+    async function removeFromTest(id){
+      let questionNew = [];
+      for(let question of quizQuestions){
+        if(question.id != id){
+         questionNew.push(question);
+        }
+        else{
+          questions.push(question);
+        }
+      }
+      quizQuestions = questionNew;
+      displayTheQuestions();
+      displayTheTestQs();
+    }
+
+    async function saveTest(){
+      let questionids = [];
+      for(let question of quizQuestions){
+         questionids.push(question.id);
+      }
+      let form = document.forms[0];
+      let formData = new FormData(form);
+      let data = Object.fromEntries(formData);
+      let quiz = {};
+      quiz.title = data;
+      quiz.questionIds = questionids;
+
+      let id = pullInt(quiz.title);
+      if(firstSubmission){
+        firstSubmission = false;
+        addTheQuestion(quiz);
+      }
+      else{
+        updateTheQuestion(quiz, id);
+      }
+    }
+
+    async function saveTestFinal(){
+      let questionids = [];
+      for(let question of quizQuestions){
+        questionids.push(question.id);
+      }
+      let form = document.forms[0];
+      let formData = new FormData(form);
+      let data = Object.fromEntries(formData);
+      let quiz = {};
+      quiz.title = data;
+      quiz.questionIds = questionids;
+
+      let id = pullInt(quiz.title);
+      if(firstSubmission){
+        firstSubmission = false;
+        addTheQuestion(quiz);
+      }
+      else{
+        updateTheQuestion(quiz, id);
+      }
+    }
+
+
+    async function addTheQuestion(quiz) {
+      let message = "";
+
+      let request = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(quiz),
+      };
+      let response = await fetch(host + "/quizzes", request);
+      if (response.status == 200) {
+        let id = await response.json();
+        message = "The question was added successfully!";
+      } else {
+        console.log(response);
+        message = "Something went wrong! Quiz data could not be saved.";
+      }
+      alert(message);
+      location.href = "make-a-quiz.html";
+    }
+
+
+    async function updateTheQuestion(quiz, id) {
+      let message = "";
+
+      let request = {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(quiz),
+      };
+      let response = await fetch(host + "/quizzes/" + id, request);
+      if (response.status == 200) {
+        let id = await response.json();
+        message = "The question was added successfully!";
+      } else {
+        console.log(response);
+        message = "Something went wrong! Quiz data could not be saved.";
+      }
+      alert(message);
+      location.href = "make-a-quiz.html";
+    }
+
+    async function pullInt(quiz){
+      let x = quiz.split();
+      idt = x.slice(-1);
+      id = idt.parseInt();
+      return id;
+    }
+
+  </script>
+</body>
+</html>

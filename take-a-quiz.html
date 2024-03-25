@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Testing Wizard</title>
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="general.css">
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="cards.css">
+</head>
+<body>
+  <ul class="topnav">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="add-question.html">Add questions</a></li>
+    <li><a href="make-a-quiz.html">Create a quiz</a></li>
+    <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
+    <li class="right"><a href="#about">About</a></li>
+  </ul>
+
+  <div class="Quizzes Available">
+    <div class="list">
+
+    </div>
+  </div>
+  <script>
+    let host = "https://midterm-latest-w94l.onrender.com";
+    let quizzes = [];
+
+    async function getAll(){
+        let response = await fetch(host + "/quizzes");
+        let result = await response.json();
+        return result;
+    }
+
+    async function displayTheQuizzes(){
+      if(quizzes.length == 0){
+        quizzes = await getAll();
+      }
+
+      let list = document.getElementById("list");
+      list.innerHTML = "";
+
+      for (let quiz of quizzes) {
+          let id = pullInt(quiz.title);
+          let div = document.createElement("div");
+          div.className = "card";
+          let innerHtml = `
+            <div class="container">
+              <h4><b>${id}</b></h4>
+              <p>${quiz.title}</p>
+              <p>${quiz.questionids.length} questions</p>
+              <button onclick="takeQuiz(${id}})">Take Quiz</button>
+            </div>
+          `;
+      }
+    }
+
+    async function pullInt(quiz){
+      let x = quiz.split();
+      idt = x.slice(-1);
+      id = idt.parseInt();
+      return id;
+    }
+
+    async function takeQuiz(id){
+      
+    }
+  </script>
+
+</body>
+</html>
